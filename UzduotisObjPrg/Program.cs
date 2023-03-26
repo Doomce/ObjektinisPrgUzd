@@ -9,16 +9,13 @@ internal class Program
 {
     public static void Main(string[] args)
     {
-        new FileOperation();
-        
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        Console.WriteLine(Randomizer.GetRandomWord());
-        
+        FileOperation.GetWordList();
+        if (FileOperation.WordList.Count == 0)
+        {
+            Console.WriteLine("Wordlist tuščias.");
+            return;
+        }
+
         Console.WriteLine("Iš programos galite išeiti naudodami mygtuką - ESC");
         Console.WriteLine("Gerą diena, įveskite savo vardą:");
         var name = Console.ReadLine();

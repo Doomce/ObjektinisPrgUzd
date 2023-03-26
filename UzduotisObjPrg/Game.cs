@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using UzduotisObjPrg.Objects;
 using UzduotisObjPrg.Units;
@@ -13,18 +14,15 @@ public class Game
 
     public Game(GameLevel lvl, string plName)
     {
-        //new FileOperation inicializuoja ir wordlista.
-        _player = new FileOperation().GetPlayer(plName);
+        _player = FileOperation.GetPlayer(plName);
         _level = lvl;
-        
-        Console.WriteLine("");
         WordGame();
     }
 
     private void WordGame()
     {
         _tries = (int) _level;
-
+        Console.WriteLine("");
         try
         {
             string word = Randomizer.GetRandomWord();
@@ -42,17 +40,33 @@ public class Game
                 if (string.IsNullOrEmpty(input)) continue;
                 if (CheckInput(word, input, ref guessedChars)) break;
             }
+            
+            Randomizer.RemoveWordFromList(word);
         } catch (RandomizerException) {
             Console.WriteLine("Žaidimas baigėsi, nes nebeliko žodžių.....");
             return;
         }
-        
+
+        FileOperation.SavePlayer(_player);
         _player.PrintStats();
+        
 
         while (true)
         {
-            if (Console.ReadKey().Key == ConsoleKey.T) WordGame();
-            if (Console.ReadKey().Key == ConsoleKey.N) break;
+            Console.WriteLine("Ar nori tęsti žaidimą? [T] - Taip; [N] - NE.");
+            var key = Console.ReadKey().Key;
+            if (key == ConsoleKey.T)
+            {
+                WordGame();
+                break;
+            }
+
+            if (key == ConsoleKey.N)
+            {
+                Console.WriteLine("Nebetesim zaidimo....");
+                Process.GetCurrentProcess().Kill();
+                break;
+            }
         }
     }
     

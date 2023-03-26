@@ -1,47 +1,49 @@
+using System.Security;
 using System.Text.RegularExpressions;
 using UzduotisObjPrg.Objects;
 
 namespace UzduotisObjPrg.Units;
 
-public class FileOperation
+public static class FileOperation
 {
     public static List<String> WordList { get; set; } = new List<string>();
 
-    private string _wordListPath = @"C:\Users\DOM\RiderProjects\UzduotisObjPrg\UzduotisObjPrg\Wordlist.txt";
-    private string _usersTxtPath = @"C:\Users\DOM\RiderProjects\UzduotisObjPrg\UzduotisObjPrg\scoreboard.txt";
-    
-    public FileOperation()
-    {
-        if (WordList.Count == 0) GetWordList();
-    }
+    private static string _wordListPath = @"C:\Users\DOM\RiderProjects\UzduotisObjPrg\UzduotisObjPrg\Wordlist.txt";
+    private static string _usersTxtPath = @"C:\Users\DOM\RiderProjects\UzduotisObjPrg\UzduotisObjPrg\scoreboard.txt";
 
-    private void GetWordList()
+    public static void GetWordList()
     {
-        WordList = new List<string>(ReadValuesFromFile(_wordListPath));
+        WordList = new List<string>(File.ReadAllLines(_wordListPath));
     }
     
-    private List<string> ReadValuesFromFile(string path)
+    private static List<Player> ReadValuesFromFile(string path)
     {
-        var list = new List<string>();
-        using (var reader = new StreamReader(path))
+        try
         {
-            while (!reader.EndOfStream)
-            {
-                string? value = reader.ReadLine();
-                if (String.IsNullOrEmpty(value)) continue;
-                list.Add(value);
-            }
+            return File.ReadAllLines(_usersTxtPath).ToList().ConvertAll<Player>(
+                pl => new Player(pl.Split(" ")[0], int.Parse(pl.Split(" ")[1])));
         }
-        return list;
+        catch (Exception exception) when (exception is FileNotFoundException or SecurityException)
+        {
+            return new List<Player>();
+        }
     }
 
-    public Player GetPlayer(string playerName)
+    public static void SavePlayer(Player pl)
     {
-        var playerStrList = ReadValuesFromFile(_usersTxtPath);
-        var playerList = playerStrList.ConvertAll<Player>(
-            pl => new Player(pl.Split(" ")[0], int.Parse(pl.Split("0")[1])));
+        var list = ReadValuesFromFile(_usersTxtPath);
+        var index = list.FindIndex(player => player.Name.Equals(pl.Name));
         
-        return playerList.SingleOrDefault(
+        if (index >= 0) list[index].Points = pl.Points;
+        else list.Add(pl);
+        
+        var newList = list.ConvertAll<string>(player => $"{player.Name} {player.Points}");
+        File.WriteAllLines(_usersTxtPath, newList);
+    }
+
+    public static Player GetPlayer(string playerName)
+    {
+        return ReadValuesFromFile(_usersTxtPath).SingleOrDefault(
             p => p.Name.Equals(playerName, StringComparison.CurrentCultureIgnoreCase),
             new Player(playerName));
     }
